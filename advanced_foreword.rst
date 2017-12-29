@@ -42,7 +42,7 @@ Web 开发危机四伏
 .. _python-3-support-in-flask:
 
 Flask 对 Python 3 的支持
-----------------------
+-------------------------
 
 Flask 和它的依赖库，以及大多数 Flask 扩展都支持 Python 3。如果你在 Python 3 下使用 Flask，可以查阅 :ref:`python3-support` 页面。
 
