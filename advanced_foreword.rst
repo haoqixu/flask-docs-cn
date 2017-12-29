@@ -39,19 +39,11 @@ Web 开发危机四伏
 开发者必须在为需求编写代码时留心安全隐患，在这点上，Flask 与其它框架没有区
 别。
 
-.. _the-status-of-python-3:
+.. _python-3-support-in-flask:
 
-Python 3 的状态
+Flask 对 Python 3 的支持
 ----------------------
 
-Python 社区目前处于改善库对 Python 新版本支持的进程中。而当前大力改进中的
-处境仍有一些问题，使得用户难以迁移到 Python 3 。这些问题一部分是因为长时间
-没有回顾语言中的变化，一部分也是因为我们没有找出低层 API 应该如何做出修改
-来适应 Python 3 中 Unicode 的变化。
-
-我们强烈建议在开发时使用 Python 2.6 和 2.7 ，并激活 Python 3 警告。如果你
-计划在近期升级到 Python 3 ，我们强烈推荐你阅读
-`如何编写向后兼容的 Python 代码
-<http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python/>`_ 。
+Flask 和它的依赖库，以及大多数 Flask 扩展都支持 Python 3。如果你在 Python 3 下使用 Flask，可以查阅 :ref:`python3-support` 页面。
 
 继续阅读 :ref:`installation` 或 :ref:`quickstart` 。
