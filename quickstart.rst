@@ -18,28 +18,14 @@
 
     @app.route('/')
     def hello_world():
-        return 'Hello World!'
-
-    if __name__ == '__main__':
-        app.run()
-
-把它保存为 `hello.py` （或是类似的），然后用 Python 解释器来运行。
-确保你的应用文件名不是 `flask.py` ，因为这将与 Flask 本身冲突。
-
-::
-
-    $ python hello.py
-     * Running on http://127.0.0.1:5000/
-
-现在访问 `http://127.0.0.1:5000/ <http://127.0.0.1:5000/>`_ ，你会
-看见 Hello World 问候。
+        return 'Hello, World!'
 
 那么，这段代码做了什么？
 
 1. 首先，我们导入了 :class:`~flask.Flask` 类。这个类的实例将会是我
    们的 WSGI 应用程序。
 2. 接下来，我们创建一个该类的实例，第一个参数是应用模块或者包的名称。
-   如果你使用单一的模块（如本例），你应该使用 `__name__` ，因为模块
+   如果你使用单一的模块（如本例），你应该使用 ``__name__`` ，因为模块
    的名称将会因其作为单独应用启动还是作为模块导入而有不同（
    也即是 ``'__main__'`` 或实际的导入名）。这是必须的，这样 Flask
    才知道到哪去找模板、静态文件等等。详情见 :class:`~flask.Flask`
@@ -48,11 +34,31 @@
    的URL 能触发我们的函数。
 4. 这个函数的名字也在生成 URL 时被特定的函数采用，这个函数返回我们想
    要显示在用户浏览器中的信息。
-5. 最后我们用 :meth:`~flask.Flask.run` 函数来让应用运行在本地服务器上。
-   其中 ``if __name__ == '__main__':`` 确保服务器只会在该脚本被
-   Python 解释器直接执行的时候才会运行，而不是作为模块导入的时候。
 
-欲关闭服务器，按 Ctrl+C。
+把它保存为 `hello.py` （或是其它类似的）。
+确保你的应用文件名不是 :file:`flask.py` ，因为这将与 Flask 本身冲突。
+
+为了运行应用程序，你可以使用 :command:`flask` 命令或者
+用 python 的 ``-m`` 选项运行 Flask。在这之前，你需要通过 ``FLASK_APP``
+环境变量来告知终端运行那个应用程序::
+
+    $ export FLASK_APP=hello.py
+    $ flask run
+     * Running on http://127.0.0.1:5000/
+
+你如果使用 Windows，需要用 ``set`` 替代 ``export`` 。
+
+你也可以使用 :command:`python -m flask` 作为替代::
+
+    $ export FLASK_APP=hello.py
+    $ python -m flask run
+     * Running on http://127.0.0.1:5000/
+
+这会启动一个非常简单的内建服务器，它足够用于测试却不适用于生产环境。
+更多部署选项，可以查看 :ref:`deployment` 。
+
+现在访问 `http://127.0.0.1:5000/ <http://127.0.0.1:5000/>`_ ，你会
+看见 Hello World 问候。
 
 .. _public-server:
 
@@ -62,12 +68,41 @@
    中其它任何的地方都不能访问。在调试模式下，用户可以在你的计算机上执
    行任意 Python 代码。因此，这个行为是默认的。
 
-   如果你禁用了 `debug` 或信任你所在网络的用户，你可以简单修改调用
-   :meth:`~flask.Flask.run` 的方法使你的服务器公开可用，如下::
+   如果你禁用了调试器或者信任你所在网络的用户，你可以简单地在命令上添加
+   ``--host=0.0.0.0`` 使你的服务器公开可用，如下::
 
-       app.run(host='0.0.0.0')
+       flask run --host=0.0.0.0
 	
    这会让操作系统监听所有公网 IP。
+
+
+.. _what-to-do-if-the-server-does-not-start:
+
+如果服务器没有启动该如何解决
+---------------------------------------
+
+很多可能的原因会造成 :command:`python -m flask` 失败或者 :command:`flask` 不存在的情况。首先你得查看错误信息。
+
+旧版本的 Flask
+````````````````````
+
+版本号低于 0.11 的 Flask 使用不同的方式运行应用程序。也就是说，
+:command:`flask` 和 :command:`python -m flask` 并不存在。这种情况下，
+你有两种选择：升级到更新的 Flask 版本，或者阅读 :ref:`server` 章节查看其它启动服务器的替代方法。
+
+无效的导入名
+```````````````````
+
+The ``FLASK_APP`` environment variable is the name of the module to import at 
+:command:`flask run`. In case that module is incorrectly named you will get an 
+import error upon start (or if debug is enabled when you navigate to the 
+application). It will tell you what it tried to import and why it failed.
+
+``FLASK_APP`` 环境变量保存了 :command:`flask run` 将导入的模块名称。如果模块名称不正确，
+在开始运行的时候你会得到一个导入错误的信息，它能告诉你出现错误时正在尝试导入的模块
+以及为什么导入失败。
+
+最常见的原因是拼写错误或者因为你实际上没有创建 ``app`` 对象。
 
 
 .. _debug-mode:
@@ -75,21 +110,27 @@
 调试模式
 ----------
 
-虽然 :meth:`~flask.Flask.run` 方法适用于启动本地的开发服务器，但是
+（如果你只是想把错误和堆栈信息写入日志，可以查看 :ref:`application-errors` ）
+
+虽然 :command:`flask` 脚本适用于启动本地的开发服务器，但是
 你每次修改代码后都要手动重启它。这样并不够优雅，而且 Flask 可以做到更
 好。如果你启用了调试支持，服务器会在代码修改后自动重新载入，并在发生
 错误时提供一个相当有用的调试器。
 
-有两种途径来启用调试模式。一种是直接在应用对象上设置::
+你可以在启动服务器之前导出 ``FLASK_DEBUG`` 环境变量来启用调试模式::
 
-    app.debug = True
-    app.run()
+    $ export FLASK_DEBUG=1
+    $ flask run
 
-另一种是作为 run 方法的一个参数传入::
+（在 Windows 上你需要用 ``set`` 替换 ``export`` 。）
 
-    app.run(debug=True)
+上面的步骤完成下列事项：
 
-两种方法的效果完全相同。
+1. 启用调试器
+2. 启用代码更改的自动重载器
+3. 在 Flask 应用程序中启用调试模式
+
+更多的参数详见 :ref:`server` 文档。
 
 .. admonition:: 注意
 
@@ -126,7 +167,7 @@ URL 上。
 
     @app.route('/hello')
     def hello():
-        return 'Hello World'
+        return 'Hello, World'
 
 但是，不仅如此！你可以构造含有动态部分的 URL，也可以在一个函数上附着
 多个规则。
@@ -153,9 +194,12 @@ URL 上。
 转换器有下面几种：
 
 =========== ===========================================
+`string`    接受任何不含斜线的文本（默认）
 `int`       接受整数
 `float`     同 `int` ，但是接受浮点数
 `path`      和默认的相似，但也接受斜线
+`any`       匹配备选项中的一个
+`uuid`      接受 UUID 字符串
 =========== ===========================================
 
 .. admonition:: 唯一 URL / 重定向行为
@@ -174,7 +218,7 @@ URL 上。
             return 'The about page'
 
    虽然它们看起来着实相似，但它们结尾斜线的使用在 URL *定义* 中不同。
-   第一种情况中，指向 `projects` 的规范 URL 尾端有一个斜线。这种感觉
+   第一种情况中，指向 ``projects`` 的规范 URL 尾端有一个斜线。这种感觉
    很像在文件系统中的文件夹。访问一个结尾不带斜线的 URL 会被
    Flask 重定向到带斜线的规范 URL 去。
 
@@ -194,33 +238,33 @@ URL 上。
 参数，也接受对应 URL 规则的变量部分的命名参数。未知变量部分会添加到
 URL 末尾作为查询参数。这里有一些例子:
 
->>> from flask import Flask, url_for
->>> app = Flask(__name__)
->>> @app.route('/')
-... def index(): pass
-... 
->>> @app.route('/login')
-... def login(): pass
-... 
->>> @app.route('/user/<username>')
-... def profile(username): pass
-... 
->>> with app.test_request_context():
-...  print url_for('index')
-...  print url_for('login')
-...  print url_for('login', next='/')
-...  print url_for('profile', username='John Doe')
-... 
-/
-/login
-/login?next=/
-/user/John%20Doe
+    >>> from flask import Flask, url_for
+    >>> app = Flask(__name__)
+    >>> @app.route('/')
+    ... def index(): pass
+    ... 
+    >>> @app.route('/login')
+    ... def login(): pass
+    ... 
+    >>> @app.route('/user/<username>')
+    ... def profile(username): pass
+    ... 
+    >>> with app.test_request_context():
+    ...  print url_for('index')
+    ...  print url_for('login')
+    ...  print url_for('login', next='/')
+    ...  print url_for('profile', username='John Doe')
+    ... 
+    /
+    /login
+    /login?next=/
+    /user/John%20Doe
 
 （这里也用到了 :meth:`~flask.Flask.test_request_context` 方法，下面会
 解释。即使我们正在通过 Python 的 shell 进行交互，它依然会告诉 Flask 要
 表现为正在处理一个请求。请看下面的解释。 :ref:`context-locals` ）
 
-为什么你要构建 URL 而非在模板中硬编码？这里有三个绝妙的理由：
+为什么你要使用 URL 转换函数 :func:`~flask.url_for` 构建 URL 而非在模板中硬编码？这里有三个绝妙的理由：
 
 1. 反向构建通常比硬编码的描述性更好。更重要的是，它允许你一次性修改 URL，
    而不是到处边找边改。
@@ -233,8 +277,10 @@ URL 末尾作为查询参数。这里有一些例子:
 HTTP 方法
 ````````````
 HTTP （与 Web 应用会话的协议）有许多不同的访问 URL 方法。默认情况下，路
-由只回应 `GET` 请求，但是通过 :meth:`~flask.Flask.route` 装饰器传递
-`methods` 参数可以改变这个行为。这里有一些例子::
+由只回应 ``GET`` 请求，但是通过 :meth:`~flask.Flask.route` 装饰器传递
+``methods`` 参数可以改变这个行为。这里有一些例子::
+
+    from flask import request
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
@@ -243,10 +289,10 @@ HTTP （与 Web 应用会话的协议）有许多不同的访问 URL 方法。�
         else:
             show_the_login_form()
 
-如果存在 `GET` ，那么也会替你自动地添加 `HEAD`，无需干预。它会确保
-遵照 `HTTP RFC`_ （描述 HTTP 协议的文档）处理 `HEAD` 请求，所以你可以
+如果存在 ``GET`` ，那么也会替你自动地添加 ``HEAD`` ，无需干预。它会确保
+遵照 `HTTP RFC`_ （描述 HTTP 协议的文档）处理 ``HEAD`` 请求，所以你可以
 完全忽略这部分的 HTTP 规范。同样，自从 Flask 0.6 起， 也实现了
-`OPTIONS` 的自动处理。
+``OPTIONS`` 的自动处理。
 
 你不知道一个 HTTP 方法是什么？不必担心，这里会简要介绍 HTTP 方法和它们
 为什么重要：
@@ -254,32 +300,32 @@ HTTP （与 Web 应用会话的协议）有许多不同的访问 URL 方法。�
 HTTP 方法（也经常被叫做“谓词”）告知服务器，客户端想对请求的页面 *做*
 些什么。下面的都是非常常见的方法：
 
-`GET`
+``GET``
     浏览器告知服务器：只 *获取* 页面上的信息并发给我。这是最常用的方法。
 
-`HEAD`
+``HEAD``
     浏览器告诉服务器：欲获取信息，但是只关心 *消息头* 。应用应像处理
-    `GET` 请求一样来处理它，但是不分发实际内容。在 Flask 中你完全无需
+    ``GET`` 请求一样来处理它，但是不分发实际内容。在 Flask 中你完全无需
     人工    干预，底层的 Werkzeug 库已经替你打点好了。
 
-`POST`
+``POST``
     浏览器告诉服务器：想在 URL 上 *发布* 新信息。并且，服务器必须确保
     数据已存储且仅存储一次。这是 HTML 表单通常发送数据到服务器的方法。
 
-`PUT`
-    类似 `POST` 但是服务器可能触发了存储过程多次，多次覆盖掉旧值。你可
+``PUT``
+    类似 ``POST`` 但是服务器可能触发了存储过程多次，多次覆盖掉旧值。你可
     能会问这有什么用，当然这是有原因的。考虑到传输中连接可能会丢失，在
     这种    情况下浏览器和服务器之间的系统可能安全地第二次接收请求，而
-    不破坏其它东西。因为 `POST` 它只触发一次，所以用 `POST` 是不可能的。
+    不破坏其它东西。因为 ``POST`` 它只触发一次，所以用 ``POST`` 是不可能的。
 
-`DELETE`
+``DELETE``
     删除给定位置的信息。
 
-`OPTIONS`
+``OPTIONS``
     给客户端提供一个敏捷的途径来弄清这个 URL 支持哪些 HTTP 方法。
     从 Flask 0.6 开始，实现了自动处理。
 
-有趣的是，在 HTML4 和 XHTML1 中，表单只能以 `GET` 和 `POST` 方法提交到
+有趣的是，在 HTML4 和 XHTML1 中，表单只能以 ``GET`` 和 ``POST`` 方法提交到
 服务器。但是 JavaScript 和未来的 HTML 标准允许你使用其它所有的方法。此
 外，HTTP 最近变得相当流行，浏览器不再是唯一的 HTTP 客户端。比如，许多版
 本控制系统就在使用 HTTP。
@@ -293,14 +339,14 @@ HTTP 方法（也经常被叫做“谓词”）告知服务器，客户端想对
 
 动态 web 应用也会需要静态文件，通常是 CSS 和 JavaScript 文件。理想状况下，
 你已经配置好 Web 服务器来提供静态文件，但是在开发中，Flask 也可以做到。
-只要在你的包中或是模块的所在目录中创建一个名为 `static` 的文件夹，在应用
-中使用 `/static` 即可访问。
+只要在你的包中或是模块的所在目录中创建一个名为 :file:`static` 的文件夹，在应用
+中使用 ``/static`` 即可访问。
 
 给静态文件生成 URL ，使用特殊的 ``'static'`` 端点名::
 
     url_for('static', filename='style.css')
 
-这个文件应该存储在文件系统上的 ``static/style.css`` 。
+这个文件应该存储在文件系统上的 :file:`static/style.css` 。
 
 .. rendering-templates:
 
@@ -322,7 +368,7 @@ HTTP 方法（也经常被叫做“谓词”）告知服务器，客户端想对
     def hello(name=None):
         return render_template('hello.html', name=name)
 
-Flask 会在 `templates` 文件夹里寻找模板。所以，如果你的应用是个模块，这
+Flask 会在 :file:`templates` 文件夹里寻找模板。所以，如果你的应用是个模块，这
 个文件夹应该与模块同级；如果它是一个包，那么这个文件夹作为包的子目录:
 
 **情况 1**: 模块::
@@ -340,7 +386,7 @@ Flask 会在 `templates` 文件夹里寻找模板。所以，如果你的应用�
 
 关于模板，你可以发挥 Jinja2 模板的全部实例。更多信息请见
 `Jinja2 模板文档
-<http://docs.jinkan.org/docs/jinja2>`_ 。
+<http://docs.jinkan.org/docs/templates>`_ 。
 
 这里有一个模板实例：
 
@@ -351,7 +397,7 @@ Flask 会在 `templates` 文件夹里寻找模板。所以，如果你的应用�
     {% if name %}
       <h1>Hello {{ name }}!</h1>
     {% else %}
-      <h1>Hello World!</h1>
+      <h1>Hello, World!</h1>
     {% endif %}
 
 在模板里，你也可以访问 :class:`~flask.request` 、
@@ -362,20 +408,20 @@ Flask 会在 `templates` 文件夹里寻找模板。所以，如果你的应用�
 :ref:`template-inheritance` 模式的文档。最起码，模板继承能使特定元素
 （比如页眉、导航栏和页脚）可以出现在所有的页面。
 
-自动转义功能默认是开启的，所以如果 `name` 包含 HTML ，它将会被自动转
+自动转义功能默认是开启的，所以如果 ``name`` 包含 HTML ，它将会被自动转
 义。如果你能信任一个变量，并且你知道它是安全的（例如一个模块把 Wiki 标
 记转换为 HTML），你可以用 :class:`~jinja2.Markup` 类或 ``|safe`` 过滤
 器在模板中把它标记为安全的。在 Jinja 2 文档中，你会看到更多的例子。
 
-这里是一个 :class:`~jinja2.Markup` 类如何使用的简单介绍:
+这里是一个 :class:`~jinja2.Markup` 类如何使用的简单介绍::
 
->>> from flask import Markup
->>> Markup('<strong>Hello %s!</strong>') % '<blink>hacker</blink>'
-Markup(u'<strong>Hello &lt;blink&gt;hacker&lt;/blink&gt;!</strong>')
->>> Markup.escape('<blink>hacker</blink>')
-Markup(u'&lt;blink&gt;hacker&lt;/blink&gt;')
->>> Markup('<em>Marked up</em> &raquo; HTML').striptags()
-u'Marked up \xbb HTML'
+    >>> from flask import Markup
+    >>> Markup('<strong>Hello %s!</strong>') % '<blink>hacker</blink>'
+    Markup(u'<strong>Hello &lt;blink&gt;hacker&lt;/blink&gt;!</strong>')
+    >>> Markup.escape('<blink>hacker</blink>')
+    Markup(u'&lt;blink&gt;hacker&lt;/blink&gt;')
+    >>> Markup('<em>Marked up</em> &raquo; HTML').striptags()
+    u'Marked up \xbb HTML'
 
 .. versionchanged:: 0.5
    自动转义不再在所有模板中启用。下列扩展名的模板会触发自动转义：
@@ -419,7 +465,7 @@ Flask 中的某些对象是全局对象，但却不是通常的那种。这些�
 可以完全无视它。你会发现依赖于一段请求对象的代码，因没有请求对象无法正
 常运行。解决方案是，自行创建一个请求对象并且把它绑定到环境中。单元测试
 的最简单的解决方案是：用 :meth:`~flask.Flask.test_request_context` 环
-境管理器。结合 `with` 声明，绑定一个测试请求，这样你才能与之交互。下面
+境管理器。结合 ``with`` 声明，绑定一个测试请求，这样你才能与之交互。下面
 是一个例子::
 
     from flask import request
@@ -444,12 +490,12 @@ Flask 中的某些对象是全局对象，但却不是通常的那种。这些�
 ``````````````````
 
 API 章节对请求对象作了详尽阐述（参见 :class:`~flask.request` ），因此这
-里不会赘述。此处宽泛介绍一些最常用的操作。首先从 `flask` 模块里导入它::
+里不会赘述。此处宽泛介绍一些最常用的操作。首先从 ``flask`` 模块里导入它::
 
     from flask import request
 
 当前请求的 HTTP 方法可通过 :attr:`~flask.request.method` 属性来访问。通
-过:attr:`~flask.request.form` 属性来访问表单数据（ `POST` 或 `PUT` 请求
+过:attr:`~flask.request.form` 属性来访问表单数据（ ``POST`` 或 ``PUT`` 请求
 提交的数据）。这里有一个用到上面提到的那两个属性的完整实例::
 
     @app.route('/login', methods=['POST', 'GET'])
@@ -465,7 +511,7 @@ API 章节对请求对象作了详尽阐述（参见 :class:`~flask.request` ）
         # was GET or the credentials were invalid
         return render_template('login.html', error=error)
 
-当访问 `form` 属性中的不存在的键会发生什么？会抛出一个特殊的
+当访问 ``form`` 属性中的不存在的键会发生什么？会抛出一个特殊的
 :exc:`KeyError` 异常。你可以像捕获标准的 :exc:`KeyError` 一样来捕获它。
 如果你不这么做，它会显示一个 HTTP 400 Bad Request 错误页面。所以，多数
 情况下你并不需要干预这个行为。
@@ -475,7 +521,7 @@ API 章节对请求对象作了详尽阐述（参见 :class:`~flask.request` ）
 
     searchword = request.args.get('q', '')
 
-我们推荐用 `get` 来访问 URL 参数或捕获 `KeyError` ，因为用户可能会修
+我们推荐用 `get` 来访问 URL 参数或捕获 :exc:`KeyError` ，因为用户可能会修
 改 URL，向他们展现一个 400 bad request 页面会影响用户体验。
 
 欲获取请求对象的完整方法和属性清单，请参阅 :class:`~flask.request` 的
@@ -511,7 +557,7 @@ API 章节对请求对象作了详尽阐述（参见 :class:`~flask.request` ）
 :func:`~werkzeug.utils.secure_filename` 函数::
 
     from flask import request
-    from werkzeug import secure_filename
+    from werkzeug.utils import secure_filename
 
     @app.route('/upload', methods=['GET', 'POST'])
     def upload_file():
@@ -599,19 +645,21 @@ Cookies
 Flask，该页的错误代码是 404 ，即没有找到。默认为 200，也就是一切
 正常。
 
+详见 :ref:`error-handlers` 。
+
 .. _about-responses:
 
 关于响应
 ---------------
 
 视图函数的返回值会被自动转换为一个响应对象。如果返回值是一个字符串，
-它被转换为该字符串为主体的、状态码为 ``200 OK``的 、 MIME 类型是
-``text/html`` 的响应对象。Flask 把返回值转换为响应对象的逻辑是这样：
+它被转换为该字符串为主体的、状态码为 ``200 OK`` 的 、 MIME 类型是
+:mimetype:``text/html`` 的响应对象。Flask 把返回值转换为响应对象的逻辑是这样：
 
 1.  如果返回的是一个合法的响应对象，它会从视图直接返回。
 2.  如果返回的是一个字符串，响应对象会用字符串数据和默认参数创建。
 3.  如果返回的是一个元组，且元组中的元素可以提供额外的信息。这样的
-    元组必须是 ``(response, status, headers)`` 的形式，且至少包含一
+    元组必须是 ``(response, status, headers)`` 或者 ``(response, headers)`` 的形式，且至少包含一
     个元素。 `status` 值会覆盖状态代码， `headers` 可以是一个列表或
     字典，作为额外的消息标头值。
 4.  如果上述条件均不满足， Flask 会假设返回值是一个合法的 WSGI 应用
@@ -620,18 +668,14 @@ Flask，该页的错误代码是 404 ，即没有找到。默认为 200，也就
 如果你想在视图里操纵上述步骤结果的响应对象，可以使用
 :func:`~flask.make_response` 函数。
 
-譬如你有这样一个视图:
-
-.. sourcecode:: python
+譬如你有这样一个视图::
 
     @app.errorhandler(404)
     def not_found(error):
         return render_template('error.html'), 404
 
 你只需要把返回值表达式传递给 :func:`~flask.make_response` ，获取结
-果对象并修改，然后再返回它:
-
-.. sourcecode:: python
+果对象并修改，然后再返回它::
 
     @app.errorhandler(404)
     def not_found(error):
@@ -667,7 +711,7 @@ Cookies 进行密钥签名。这意味着用户可以查看你 Cookie 的内容�
             session['username'] = request.form['username']
             return redirect(url_for('index'))
         return '''
-            <form action="" method="post">
+            <form method="post">
                 <p><input type=text name=username>
                 <p><input type=submit value=Login>
             </form>
@@ -688,18 +732,20 @@ Cookies 进行密钥签名。这意味着用户可以查看你 Cookie 的内容�
 
    随机的问题在于很难判断什么是真随机。一个密钥应该足够随机。你的操作
    系统可以基于一个密钥随机生成器来生成漂亮的随机值，这个值可以用来做
-   密钥:
+   密钥::
 
-   >>> import os
-   >>> os.urandom(24)
-   '\xfd{H\xe5<\x95\xf9\xe3\x96.5\xd1\x01O<!\xd5\xa2\xa0\x9fR"\xa1\xa8'
+       >>> import os
+       >>> os.urandom(24)
+       '\xfd{H\xe5<\x95\xf9\xe3\x96.5\xd1\x01O<!\xd5\xa2\xa0\x9fR"\xa1\xa8'
 
-   把这个值复制粘贴进你的代码中，你就有了密钥。
+       把这个值复制粘贴进你的代码中，你就有了密钥。
 
 使用基于 cookie 的会话需注意: Flask 会将你放进会话对象的值序列化至
 Cookies。如果你发现某些值在请求之间并没有持久存在，然而确实已经启用了
 Cookies，但也没有得到明确的错误信息。这时，请检查你的页面响应中的
 Cookies 的大小，并与 Web 浏览器所支持的大小对比。
+
+如果你想在服务器端维持会话，而不用默认的客户端会话，一些 Flask 扩展可以支持这一功能。
 
 
 .. message-flashing:
@@ -740,7 +786,9 @@ Flask 0.3 开始，Flask 就已经预置了日志系统。
 
 附带的 :attr:`~flask.Flask.logger` 是一个标准日志类
 :class:`~logging.Logger` ，所以更多信息请查阅 `logging
-的文档 <http://docs.python.org/library/logging.html>`_ 。
+的文档 <https://docs.python.org/library/logging.html>`_ 。
+
+关于该话题，更多内容请查阅 :ref:`application-errors` 。
 
 .. _hooking-in-wsgi-middlewares:
 
@@ -754,22 +802,19 @@ Flask 0.3 开始，Flask 就已经预置了日志系统。
     from werkzeug.contrib.fixers import LighttpdCGIRootFix
     app.wsgi_app = LighttpdCGIRootFix(app.wsgi_app)
 
+.. _using-flask-extensions:
+
+使用 Flask 扩展
+--------------------------
+
+扩展是帮助你完成一些通用任务的包。例如，Flask-SQLAlchemy 提供 SQLAlchemy 集成支持，
+用来简化它在 Flask 中的使用。
+
+更多关于 Flask 扩展的内容，查阅 :ref:`extensions` 。
+
 .. _depolying-to-a-web-server:
 
 部署到 Web 服务器
 -------------------------
 
-准备好部署你的 Flask 应用了？你可以立即部署到托管平台来圆满完成快速
-入门，以下厂商均向小项目提供免费的方案:
-
-- `在 Heroku 上部署 Flask <http://devcenter.heroku.com/articles/python>`_
-- `在 dotCloud 上部署 Flask <http://docs.dotcloud.com/services/python/>`_ 
-  附 `Flask 的具体说明 <http://flask.pocoo.org/snippets/48/>`_
-
-托管 Flask 应用的其它选择:
-
-- `在 Webfaction 上部署 Flask <http://flask.pocoo.org/snippets/65/>`_
-- `在 Google App Engine 上部署 Flask <https://github.com/kamalgill/flask-appengine-template>`_
-- `用 Localtunnel 共享你的本地服务器 <http://flask.pocoo.org/snippets/89/>`_
-
-如果你有自己的主机，并且准备自己托管，参见 :ref:`deployment` 章节。
+准备好部署你的 Flask 应用了？前往阅读 :ref:`deployment` 章节。
