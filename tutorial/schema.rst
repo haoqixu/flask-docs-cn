@@ -5,7 +5,7 @@
 
 在该步骤中，我们要创建数据库模式。对于这个应用来说，一张表就足够了，而
 且只支持 SQLite。只需要把下面的内容放进一个名为
-:file:`schema.sql` 的文件，放在 :file:`flaskr/flaskr` 文件夹中:
+:file:`schema.sql` 的文件，放在 :file:`flaskr/flaskr` 目录中:
 
 .. sourcecode:: sql
 
