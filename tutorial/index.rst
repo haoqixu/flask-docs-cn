@@ -12,7 +12,7 @@
 如果你想预先拿到完整源码或是用于对照，请查看 `示例源码`_ 。
 
 .. _示例源码:
-   http://github.com/mitsuhiko/flask/tree/master/examples/flaskr/
+   http://github.com/pallets/flask/tree/master/examples/flaskr/
 
 .. toctree::
    :maxdepth: 2
@@ -21,6 +21,7 @@
    folders
    schema
    setup
+   packaging
    dbcon
    dbinit
    views
