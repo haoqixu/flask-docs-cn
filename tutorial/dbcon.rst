@@ -1,17 +1,15 @@
 .. _tutorial-dbcon:
 
-步骤 3: 数据库连接
+步骤 4: 数据库连接
 ------------------------------------
 
 我们已经创建了一个能建立数据库连接的函数 `connect_db` ，但它本身并
 不是很有用。总是创建或关闭数据库连接是相当低效的，所以我们会让连接
 保持更长时间。因为数据库连接封装了事务，我们也需要确保同一时刻只有
-一个请求使用这个连接。那么，如何用 Flask 优雅地实现呢？
-
-这该是应用环境上场的时候了。那么，让我们开始吧。
+一个请求使用这个连接。一个优雅的实现方法是使用 *应用环境*
 
 Flask 提供了两种环境（Context）：应用环境（Application Context）和
-请求环境（Request Context）。暂且你所需了解的是，不同环境有不同的
+请求环境（Request Context）。目前你只需要了解，不同环境有不同的
 特殊变量。例如 :data:`~flask.request` 变量与当前请求的请求对象有关，
 而 :data:`~flask.g` 是与当前应用环境有关的通用变量。我们在之后会深
 入了解它们。
@@ -47,7 +45,7 @@ Flask 提供了 :meth:`~flask.Flask.teardown_appcontext` 装饰器。它将
 
 好奇这些环境的意义？阅读 :ref:`app-context` 文档了解更多。
 
-阅读 :ref:`tutorial-dbinit` 以继续。
+继续阅读 :ref:`tutorial-dbinit` 。
 
 .. hint:: 我该把这些代码放在哪？
 
@@ -61,4 +59,4 @@ Flask 提供了 :meth:`~flask.Flask.teardown_appcontext` 装饰器。它将
    :ref:`规模扩大 <larger-applications>` 以后，这显然不妥。
 
 .. _示例源码:
-   http://github.com/mitsuhiko/flask/tree/master/examples/flaskr/
+   https://github.com/pallets/flask/tree/master/examples/flaskr/
