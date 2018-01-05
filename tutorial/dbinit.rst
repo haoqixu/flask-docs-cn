@@ -1,6 +1,6 @@
 .. _tutorial-dbinit:
 
-步骤 4: 创建数据库
+步骤 5: 创建数据库
 =============================
 
 正如之前介绍的，Flaskr 是一个数据库驱动的应用，更准确的说法
@@ -14,43 +14,46 @@
     sqlite3 /tmp/flaskr.db < schema.sql
 
 这种方法的缺点是需要安装 sqlite3 命令，而并不是每个系统都有安
-装。而且你必须提供数据库的路径，否则将报错。用函数来初始化数据
+装。而且你必须提供数据库的路径，这个可能会引入错误。用函数来初始化数据
 库是个不错的想法。
 
-要这么做，我们可以创建一个名为 `init_db` 的函数来初始化数据库。
-让我们首先看看代码。只需要把这个函数放在 `flaskr.py` 里的
+我们可以创建一个函数并且把它接入 :command:`flask` 命令用于初始化数据库。
+现在让我们看看下面的代码段。把这个函数放在 :file:`flaskr.py` 里
 `connect_db` 函数的后面::
 
     def init_db():
-        with app.app_context():
-            db = get_db()
-            with app.open_resource('schema.sql', mode='r') as f:
-                db.cursor().executescript(f.read())
-            db.commit()
+        db = get_db()
+        with app.open_resource('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
 
-那么，这段代码会发生什么？还记得吗？上个章节中提到，应用环境在
-每次请求传入时创建。这里我们并没有请求，所以我们需要手动创建一
-个应用环境。 :data:`~flask.g` 在应用环境外无法获知它属于哪个应
-用，因为可能会有多个应用同时存在。
+    @app.cli.command('initdb')
+    def initdb_command():
+        """Initializes the database."""
+        init_db()
+        print('Initialized the database.')
 
-``with app.app_context()`` 语句为我们建立了应用环境。在 with
-语句的内部， :data:`~flask.g` 对象会与 ``app`` 关联。在语句的
-结束处，会释放这个关联兵执行所有销毁函数。这意味着数据库连接在
-提交后断开。
+``app.cli.command()`` 装饰器注册了一个 :command:`flask` 脚本的
+新命令。当指令执行时，Flask 会自动创建一个与应用绑定的应用环境。
+所以，在函数中你可以访问 :attr:`flask.g` 以及其它你希望访问的东西。
+当脚本运行结束，应用会销毁应用环境并且释放数据库连接。
+
+你还是会希望保留一个初始化数据库的实际函数，这样我们可以在后面的单元测试中
+方便地创建数据库。（更多的信息请查阅 :ref:`testing` ）
 
 应用对象的 :func:`~flask.Flask.open_resource` 方法是一个很方便
 的辅助函数，可以打开应用提供的资源。这个函数从资源所在位置（
-你的 `flaskr` 文件夹）打开文件，并允许你读取它。我们在此用它来
+你的 :file:`flaskr/flaskr` 文件夹）打开文件，并允许你读取它。我们在此用它来
 在数据库连接上执行脚本。
 
 SQLite 的数据库连接对象提供了一个游标对象。游标上有一个方法可
 以执行完整的脚本。最后我们只需提交变更。SQLite 3 和其它支持事
 务的数据库只会在你显式提交的时候提交。
 
-现在可以在 Python shell 导入并调用这个函数来创建数据库::
+现在可以通过 :command:`flask` 命令来创建数据库::
 
->>> from flaskr import init_db
->>> init_db()
+    flask initdb
+    Initialized the database.
 
 .. admonition:: 故障排除
 
@@ -58,4 +61,4 @@ SQLite 的数据库连接对象提供了一个游标对象。游标上有一个�
    `init_db` 函数并且表的名称是正确的（比如弄混了单数和复数）。
 
 
-阅读 :ref:`tutorial-views` 以继续。
+继续阅读 :ref:`tutorial-views` 。
