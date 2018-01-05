@@ -7,18 +7,21 @@ Flask 本身仍然需要 Jinja2 依赖 ，这对启用富扩展是必要的，�
 
 本节只是快速地介绍 Jinja2 是如何集成到 Flask 中的。更多关于 Jinja2 语法本身的信息，
 请参考官方文档 
-`Jinja2 模板引擎 <http://jinja.pocoo.org/2/documentation/templates>`_ 。
+`Jinja2 模板引擎 <http://jinja.pocoo.org/docs/templates>`_ 。
 
 Jinja 配置
 -----------
 
 Jinja 2 默认配置如下:
 
--   所有扩展名为 ``.html`` 、 ``.htm`` 、 ``.xml`` 以及 ``.xhtml``
-    的模板会开启自动转义
+-   在使用 :func:`~flask.templating.render_template` 时，
+    所有扩展名为 ``.html`` 、 ``.htm`` 、 ``.xml`` 以及 ``.xhtml``
+    的模板会开启自动转义。
+-   在使用 :func:`~flask.templating.render_template_string` 时
+    所有的字符串都会被自动转义。
 -   模板可以利用 ``{% autoescape %}`` 标签选择自动转义的开关。
 -   Flask 在 Jinja2 上下文中插入了几个全局函数和助手，另外还有一些
-    目前默认的值
+    目前默认的值。
 
 标准上下文
 ----------------
@@ -91,7 +94,7 @@ Jinja 2 默认配置如下:
    这个函数把给定的对象转换为 JSON 表示，如果你要动态生成 JavaScript 这里有
    一个非常有用的例子。
 
-   注意 `script` 标签里的东西不应该被转义，因此如果你想在 `script` 标签里使用它，
+   注意 ``script`` 标签里的东西不应该被转义，因此如果你想在 ``script`` 标签里使用它，
    请使用 ``|safe`` 来禁用转义，:
 
    .. sourcecode:: html+jinja
