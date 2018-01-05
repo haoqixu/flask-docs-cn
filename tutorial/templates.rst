@@ -1,18 +1,19 @@
 .. _tutorial-templates:
 
-步骤 6: 模板
+步骤 7: 模板
 =====================
 
-接下来我们应该创建模板了。如果我们现在请求 URL，只会得到 Flask 无法找到模板的异常。
+接下来我们开始创建模板。你可能已经注意到，如果我们现在请求 URL，
+只会得到 Flask 无法找到模板的异常。
 模板使用 `Jinja2`_ 语法并默认开启自动转义。这意味着除非你使用
 :class:`~flask.Markup` 标记或在模板中使用 ``|safe`` 过滤器，否则 Jinja 2 会
 确保特殊字符，比如 ``<`` 或 ``>`` 被转义为等价的 XML 实体。
 
 我们也会使用模板继承在网站的所有页面中重用布局。
 
-将下面的模板放在 `templates` 文件夹里:
+将下面的模板放在 :file:`templates` 文件夹里:
 
-.. _Jinja2: http://jinja.pocoo.org/2/documentation/templates
+.. _Jinja2: http://jinja.pocoo.org/docs/templates
 
 layout.html
 -----------
@@ -48,9 +49,9 @@ layout.html
 show_entries.html
 -----------------
 
-这个模板继承了上面的 `layout.html` 模板来显示消息。注意 `for` 循环会遍历并输出
-所有 :func:`~flask.render_template` 函数传入的消息。我们还告诉表单使用 `HTTP`
-的 `POST` 方法提交信息到 `add_entry` 函数:
+这个模板继承了上面的 :file:`layout.html` 模板来显示消息。注意 ``for`` 循环会遍历并输出
+所有 :func:`~flask.render_template` 函数传入的消息。注意表单被设置成使用 HTTP
+的 ``POST`` 方法提交信息到 `add_entry` 函数:
 
 .. sourcecode:: html+jinja
 
@@ -79,7 +80,7 @@ show_entries.html
 login.html
 ----------
 
-最后是登入模板，只是简单地显示一个允许用户登入的表单:
+这是登入模板，只是简单地显示一个允许用户登入的表单:
 
 .. sourcecode:: html+jinja
 
@@ -98,4 +99,4 @@ login.html
       </form>
     {% endblock %}
 
-继续 :ref:`tutorial-css` 。
+继续阅读 :ref:`tutorial-css` 。
