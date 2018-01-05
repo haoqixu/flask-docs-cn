@@ -22,12 +22,12 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 来演示。如果您还没有获取它，请从 `the examples` 这里查找源码。
 
 .. _例子:
-   http://github.com/mitsuhiko/flask/tree/master/examples/flaskr/
+   http://github.com/pallets/flask/tree/master/examples/flaskr/
 
 测试的大框架
 --------------------
 
-为了测试这个引用，我们添加了第二个模块(`flaskr_tests.py`)，
+为了测试这个引用，我们添加了第二个模块（ :file:`flaskr_tests.py` ），
 并且创建了一个框架如下::
 
     import os
@@ -39,9 +39,10 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 
         def setUp(self):
             self.db_fd, flaskr.app.config['DATABASE'] = tempfile.mkstemp()
-            flaskr.app.config['TESTING'] = True
+            flaskr.app.testing = True
             self.app = flaskr.app.test_client()
-            flaskr.init_db()
+            with flaskr.app.app_context():
+                flaskr.init_db()
 
         def tearDown(self):
             os.close(self.db_fd)
@@ -93,8 +94,10 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 
         def setUp(self):
             self.db_fd, flaskr.app.config['DATABASE'] = tempfile.mkstemp()
+            flaskr.app.testing = True
             self.app = flaskr.app.test_client()
-            flaskr.init_db()
+            with flaskr.app.app_context():
+                flaskr.init_db()
 
         def tearDown(self):
             os.close(self.db_fd)
@@ -102,12 +105,12 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 
         def test_empty_db(self):
             rv = self.app.get('/')
-            assert 'No entries here so far' in rv.data
+            assert b'No entries here so far' in rv.data
 
 注意到我们的测试函数以 `test` 开头，这允许 :mod:`unittest` 模块自动
 识别出哪些方法是一个测试方法，并且运行它。
 
-通过使用 `self.app.get` 我们可以发送一个 HTTP `GET` 请求给应用的
+通过使用 `self.app.get` 我们可以发送一个 HTTP ``GET`` 请求给应用的
 某个给定路径。返回值将会是一个 :class:`~flask.Flask.response_class`
 对象。我们可以使用 :attr:`~werkzeug.wrappers.BaseResponse.data` 属性
 来检查程序的返回值(以字符串类型)。在这里，我们检查 ``'No entries here so far'``
@@ -146,13 +149,13 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 
    def test_login_logout(self):
        rv = self.login('admin', 'default')
-       assert 'You were logged in' in rv.data
+       assert b'You were logged in' in rv.data
        rv = self.logout()
-       assert 'You were logged out' in rv.data
+       assert b'You were logged out' in rv.data
        rv = self.login('adminx', 'default')
-       assert 'Invalid username' in rv.data
+       assert b'Invalid username' in rv.data
        rv = self.login('admin', 'defaultx')
-       assert 'Invalid password' in rv.data
+       assert b'Invalid password' in rv.data
 
 测试消息的添加
 --------------------
@@ -166,9 +169,9 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
             title='<Hello>',
             text='<strong>HTML</strong> allowed here'
         ), follow_redirects=True)
-        assert 'No entries here so far' not in rv.data
-        assert '&lt;Hello&gt;' in rv.data
-        assert '<strong>HTML</strong> allowed here' in rv.data
+        assert b'No entries here so far' not in rv.data
+        assert b'&lt;Hello&gt;' in rv.data
+        assert b'<strong>HTML</strong> allowed here' in rv.data
 
 这里我们测试计划的行为是否能够正常工作，即在正文中可以出现 HTML 
 标签，而在标题中不允许。
@@ -187,7 +190,7 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 一套更长的测试。
 
 .. _MiniTwit Example:
-   http://github.com/mitsuhiko/flask/tree/master/examples/minitwit/
+   http://github.com/pallets/flask/tree/master/examples/minitwit/
 
 
 其他测试技巧
@@ -195,10 +198,12 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 
 除了如上文演示的使用测试客户端完成测试的方法，也有一个
 :meth:`~flask.Flask.test_request_context` 方法可以
-配合 `with` 语句用于激活一个临时的请求上下文。通过
+配合 ``with`` 语句用于激活一个临时的请求上下文。通过
 它，您可以访问 :class:`~flask.request` 、:class:`~flask.g` 
 和 :class:`~flask.session` 类的对象，就像在视图中一样。
 这里有一个完整的例子示范了这种用法::
+
+    import flask
 
     app = flask.Flask(__name__)
 
@@ -215,7 +220,7 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 :meth:`~flask.Flask.before_request` 以及
 :meth:`~flask.Flask.after_request` 都不会自动运行。
 然而，:meth:`~flask.Flask.teardown_request` 函数在
-测试请求的上下文离开 `with` 块的时候会执行。如果您
+测试请求的上下文离开 ``with`` 块的时候会执行。如果您
 希望 :meth:`~flask.Flask.before_request` 函数仍然执行。
 您需要手动调用 :meth:`~flask.Flask.preprocess_request` 方法::
 
@@ -266,7 +271,7 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 :data:`flask.appcontext_pushed` 信号可以很容易地完成这个任务::
 
     from contextlib import contextmanager
-    from flask import appcontext_pushed
+    from flask import appcontext_pushed, g
 
     @contextmanager
     def user_set(app, user):
@@ -298,7 +303,7 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
 有时，激发一个通常的请求，但是将当前的上下文
 保存更长的时间，以便于附加的内省发生是很有用的。
 在 Flask 0.4 中，通过 :meth:`~flask.Flask.test_client`
-函数和 `with` 块的使用可以实现::
+函数和 ``with`` 块的使用可以实现::
 
     app = flask.Flask(__name__)
 
@@ -307,7 +312,7 @@ Flask 提供了一种方法用于测试您的应用，那就是将 Werkzeug 测�
         assert request.args['tequila'] == '42'
 
 如果您仅仅使用 :meth:`~flask.Flask.test_client` 方法，而
-不使用 `with` 代码块， `assert` 断言会失败，因为 `request`
+不使用 ``with`` 代码块， ``assert`` 断言会失败，因为 `request`
 不再可访问(因为您试图在非真正请求中时候访问它)。
 
 访问和修改 Sessions
