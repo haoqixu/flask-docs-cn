@@ -3,8 +3,8 @@
 步骤 7: 添加样式
 ====================
 
-现在其它的一切都可以正常工作，是时候给应用添加样式了。只需在之前创建的
-`static` 文件夹中创建一个名为 `style.css` 的样式表:
+现在其它的一切都可以正常工作，是时候给应用添加样式了。只需在
+:file:`static` 文件夹中创建一个名为 :file:`style.css` 的样式表:
 
 .. sourcecode:: css
 
@@ -27,4 +27,4 @@
                       border: 1px solid #AACBE2; }
     .error          { background: #F0D6D6; padding: 0.5em; }
 
-继续 :ref:`tutorial-testing` 。
+继续阅读 :ref:`tutorial-testing` 。
