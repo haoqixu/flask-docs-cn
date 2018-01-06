@@ -48,7 +48,7 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
 ``DEBUG``                         启用/禁用 调试模式
 ``TESTING``                       启用/禁用 测试模式
 ``PROPAGATE_EXCEPTIONS``          显式地允许或禁用异常的传播。如果没有设置
-                                  或显式地设置为 `None` ，当 ``TESTING`` 或
+                                  或显式地设置为 ``None`` ，当 ``TESTING`` 或
                                   ``DEBUG`` 为真时，这个值隐式地为 true.
 ``PRESERVE_CONTEXT_ON_EXCEPTION`` 默认情况下，如果应用工作在调试模式，请求
                                   上下文不会在异常时出栈来允许调试器内省。
@@ -63,20 +63,25 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
                                   没有给 ``'/'`` 设置过，则 cookie 对
                                   ``APPLICATION_ROOT`` 下的所有路径有效。
 ``SESSION_COOKIE_HTTPONLY``       控制 cookie 是否应被设置 httponly 的标志，
-                                  默认为 `True` 
+                                  默认为 ``True`` 
 ``SESSION_COOKIE_SECURE``         控制 cookie 是否应被设置安全标志，默认
-                                  为 `False`
+                                  为 ``False``
 ``PERMANENT_SESSION_LIFETIME``    以 :class:`datetime.timedelta` 对象控制
                                   长期会话的生存时间。从 Flask 0.8 开始，也
                                   可以用整数来表示秒。
 ``SESSION_REFRESH_EACH_REQUEST``  这个标志控制永久会话如何刷新。如果被设置为
-                                  `True` （这是默认值），每一个请求 cookie
-                                  都会被刷新。如果设置为 `False` ，只有当
+                                  ``True`` （这是默认值），每一个请求 cookie
+                                  都会被刷新。如果设置为 ``False`` ，只有当
                                   cookie 被修改后才会发送一个 `set-cookie` 
                                   的标头。非永久会话不会受到这个配置项的影响
                                   。
 ``USE_X_SENDFILE``                启用/禁用 x-sendfile
 ``LOGGER_NAME``                   日志记录器的名称
+``LOGGER_HANDLER_POLICY``         默认日志处理器的策略。默认为 ``'always`` ，
+                                  表示默认日志处理器总是被启用。 ``'debug'``
+                                  表示只在调试模式下启用日志， ``'production'``
+                                  表示只在生产模式下启用，而 ``'never'`` 完全
+                                  禁用日志。
 ``SERVER_NAME``                   服务器名和端口。需要这个选项来支持子域名
                                   （例如： ``'myapp.dev:5000'`` ）。注意
                                   localhost 不支持子域名，所以把这个选项设
@@ -89,9 +94,9 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
                                   ``None``
 ``MAX_CONTENT_LENGTH``            如果设置为字节数， Flask 会拒绝内容长度大于
                                   此值的请求进入，并返回一个 413 状态码
-``SEND_FILE_MAX_AGE_DEFAULT``:    默认缓存控制的最大期限，以秒计，在
-                                  :meth:`flask.Flask.send_static_file` (默认的
-                                  静态文件处理器)中使用。对于单个文件分别在
+``SEND_FILE_MAX_AGE_DEFAULT``     默认缓存控制的最大期限，以 :class:`datetiem.timedelta`
+                                  或者秒计算，在 :meth:`flask.Flask.send_static_file`
+                                  (默认的静态文件处理器)中使用。对于单个文件分别在
                                   :class:`~flask.Flask` 或
                                   :class:`~flask.Blueprint` 上使用
                                   :meth:`~flask.Flask.get_send_file_max_age`
@@ -112,7 +117,7 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
 ``JSON_AS_ASCII``                 默认情况下 Flask 使用 ascii 编码来序列化对
                                   象。如果这个值被设置为 False ， Flask不会
                                   将其编码为 ASCII，并且按原样输出，返回它的
-                                  unicode 字符串。比如 ``jsonfiy`` 会自动地采用
+                                  unicode 字符串。比如 ``jsonify`` 会自动地采用
                                   ``utf-8`` 来编码它然后才进行传输。
 ``JSON_SORT_KEYS``                默认情况下 Flask 按照 JSON 对象的键的顺序来序
                                   来序列化它。这样做是为了确保键的顺序不会受到
@@ -125,6 +130,13 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
                                   如果不是 XMLHttpRequest 请求的话（由
                                   ``X-Requested-With``  标头控制）
                                   json 字符串的返回值会被漂亮地打印出来。
+``JSONIFY_MIMETYPE``              用于 jsonify 响应的 MIME 类型。
+``TEMPLATES_AUTO_RELOAD``         是否检查模板的修改并且自动重载。默认为
+                                  ``'None'`` ，表示 Flask 只在调试模式下检查
+                                  原始文件。
+``EXPLAIN_TEMPLATE_LOADING``      如果启用该项，每次加载模板都会想日志中写入
+                                  通知信息，记录定位模板的过程。这在解决无法
+                                  找到模板或者模板加载错误时会有用处。
 ================================= =========================================
 
 .. admonition:: 关于 ``SERVER_NAME`` 的更多
@@ -167,6 +179,10 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
 
 .. versionadded:: 1.0
    ``SESSION_REFRESH_EACH_REQUEST``
+
+.. versionadded:: 0.11
+   ``SESSION_REFRESH_EACH_REQUEST``, ``TEMPLATES_AUTO_RELOAD``,
+   ``LOGGER_HANDLER_POLICY``, ``EXPLAIN_TEMPLATE_LOADING``
 
 从文件配置
 ----------------------
@@ -220,6 +236,7 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
 2.  不要写出在导入时需要配置的代码。如果你限制只在请求中访问配置，你可以在
     之后按需重新配置对象。
 
+.. _config-dev-prod:
 
 开发 / 生产
 ------------------------
@@ -232,7 +249,7 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
     app.config.from_object('yourapplication.default_settings')
     app.config.from_envvar('YOURAPPLICATION_SETTINGS')
 
-然后你只需要添加一个独立的 `config.py` 文件然后 export 
+然后你只需要添加一个独立的 :file:`config.py` 文件然后 export 
 ``YOURAPPLICATION_SETTINGS=/path/to/config.py`` 。不过，也有其它可选的方式。
 例如你可以使用导入或继承。
 
@@ -273,7 +290,7 @@ Flask 被设计为需要配置来启动应用。你可以在代码中硬编码�
 -   使用 `fabric`_ 之类的工具在生产环境中独立地向生产服务器推送代码和配置。
     参阅 :ref:`fabric-deployment` 模式来获得更详细的信息。
 
-.. _fabric: http://fabfile.org/
+.. _fabric: http://www.fabfile.org/
 
 
 .. _instance-folders:
