@@ -1,6 +1,6 @@
 .. _application-errors:
 
-记录应用错误
+应用错误
 ==========================
 
 .. versionadded:: 0.3
@@ -23,18 +23,103 @@
 
 但是你还可以做些别的，我们会介绍一些更好的设置来应对错误。
 
+错误日志工具
+----------------
 
+在有足够用户触发错误时，就算是只发送严重错误，错误邮件也可能导致
+邮件轰炸，而且日志文件很少会被查看。这就是为什么我们推荐使用
+`Sentry <http://www.getsentry.com/>`_ 处理应用程序错误。
+这是一个在 `GitHub <https://github.com/getsentry/sentry>`__ 上开源的项目，
+也有一个可供免费试用的 `服务器托管版本 <https://getsentry.com/signup/>`_ 。
+Sentry 聚合重复的错误，捕获完整的堆栈追踪以及本地变量用于调试，并且根据新的
+错误或者频率阈值给你发送邮件。
+
+为了使用 Sentry，你需要安装 `raven` 客户端::
+
+    $ pip install raven
+
+并且添加下面的代码到你的 Flask 应用::
+
+    from raven.contrib.flask import Sentry
+    sentry = Sentry(app, dsn='YOUR_DSN_HERE')
+
+或者如果你使用工厂函数，你可以在稍后再初始化它::
+
+    from raven.contrib.flask import Sentry
+    sentry = Sentry(dsn='YOUR_DSN_HERE')
+
+    def create_app():
+        app = Flask(__name__)
+        sentry.init_app(app)
+        ...
+        return app
+
+`YOUR_DSN_HERE` 需要替换成你在安装 Sentry 时得到的 DSN 值。
+
+之后故障会自动报告到 Sentry，并且你会从那受到错误通知。
+
+.. _error-handlers:
+
+错误处理程序
+--------------
+
+你可能希望当错误出现时向用户展示一个自定义的错误页面。这可以通过注册错误处理
+程序来实现。
+
+错误处理程序是普通的 `试图函数 <views>`_ ，但是它们被注册到想要处理的异常，
+而不是特定路由。
+
+注册
+```````````
+
+Register error handlers using :meth:`~flask.Flask.errorhandler` or
+:meth:`~flask.Flask.register_error_handler`::
+使用 :meth:`~flask.Flask.errorhandler` 或者 :meth:`~flask.Flask.register_error_handler`
+注册错误处理程序::
+
+    @app.errorhandler(werkzeug.exceptions.BadRequest)
+    def handle_bad_request(e):
+        return 'bad request!'
+    
+    app.register_error_handler(400, lambda e: 'bad request!')
+
+这两种方法是等价的，但是第一种更加清晰，并且为你保留了一个在你心血来潮
+（或者在测试中）可供调用的函数。注意 :exc:`werkzeug.exceptions.HTTPException`
+的子类，像例子中的 :exc:`~werkzeug.exceptions.BadRequest` ，以及他们的 HTTP
+状态码在注册方法或装饰器中是可更改的（ ``BadRequest.code == 400`` ）。
+
+You are however not limited to :exc:`~werkzeug.exceptions.HTTPException`
+or HTTP status codes but can register a handler for every exception class you
+like.
+然而，你可以为所有的异常类注册处理程序，不仅仅只限于
+:exc:`~werkzeug.exceptions.HTTPException` 或者 HTTP 状态码。
+
+.. versionchanged:: 0.11
+
+   现在，错误处理程序的优先级由注册的异常类型决定，而不是又注册的顺序。
+
+处理
+````````
+
+一旦异常实例被抛出，它的类型继承会被遍历，以搜索注册的相应处理程序。
+最明确符合的处理程序被调用。
+
+举例来说，如果 :exc:`ConnectionRefusedError` 的一个实例被抛出，并且
+:exc:`ConnectionError` 和 :exc:`ConnectionRefusedError` 被注册了处理程序，
+那么更加明确的 :exc:`ConnectionRefusedError` 对应的处理程序会被调用，它的结果
+会被显示给用户。
+ 
 错误邮件
 -----------
 
-如果你的应用在生产模式下运行（会在你的服务器上做），默认情况下，你不会看见
-任何日志消息。为什么会这样？Flask 试图实现一个零配置框架。如果没有配置，日
-志会存放在哪？猜测不是个好主意，因为它猜测的位置可能不是一个用户有权创建日
-志文件的地方。而且，对于大多数小型应用，不会有人关注日志。
+如果你的应用在生产模式下运行（你在服务器上会这么做的），默认情况下，你可能
+不会看见任何日志消息。因为 Flask 默认情况下会把信息输出到 WSGI 错误流或者
+标准错误中（取决于哪个可用）。最终错误信息有时会变得很难找，通常在你的 Web
+服务器日志文件里。
 
-事实上，我现在向你保证，如果你给应用错误配置一个日志文件，你将永远不会去看
-它，除非在调试问题时用户向你报告。你需要的应是异常发生时的邮件，然后你会得
-到一个警报，并做些什么。
+我非常肯定地向你保证，如果你只是给应用错误配置了日志文件，你将永远不会去看
+它，除非在调试用户向你报告的问题时。你需要的应是异常发生时的邮件，然后你会得
+到一个警报，并采取一些行动。
 
 Flask 使用 Python 内置的日志系统，而且它确实向你发送你可能需要的错误邮件。
 这里给出你如何配置 Flask 日志记录器向你发送报告异常的邮件::
@@ -66,7 +151,8 @@ Flask 使用 Python 内置的日志系统，而且它确实向你发送你可能
 -----------------
 
 即便你收到了邮件，你可能还是想记录警告。当调试问题的时候，收集更多的信息是个
-好主意。请注意 Flask 核心系统本身不会发出任何警告，所以在古怪的事情发生时发
+好主意。自 Flask 0.11 起，默认情况下，错误信息会自动记录到你的 Web 服务器日志里，
+而警告信息则不会。 请注意 Flask 核心系统本身不会发出任何警告，所以在古怪的事情发生时发
 出警告是你的责任。
 
 在日志系统的方框外提供了一些处理程序，但它们对记录基本错误并不是都有用。最让人
@@ -158,7 +244,8 @@ Flask 使用 Python 内置的日志系统，而且它确实向你发送你可能
 +------------------+----------------------------------------------------+
 | ``%(lineno)d``   | 日志记录调用所在的源文件行的行号（如果可用）       |
 +------------------+----------------------------------------------------+
-| ``%(asctime)s``  | `LogRecord` 创建时的人类可读的时间。默认情况下，格 |
+| ``%(asctime)s``  | :class:`~logging.LogRecord` 创建时的人类可读的时间 |
+|                  | 。默认情况下，格                                   |
 |                  | 式为 ``"2003-07-08 16:49:45,896"`` （逗号后的数字  |
 |                  | 时间的毫秒部分）。这可以通过继承                   |
 |                  | :class:~logging.Formatter，并                      |
