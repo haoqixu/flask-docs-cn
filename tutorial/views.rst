@@ -89,7 +89,7 @@
 
     在生产环境中，永远不要用明文存储密码。本教程使用明文密码是为了简化。
     如果你打算对外发布一个基于该教程的项目，将密码存储到数据库或者文件前，
-    切记对它进行 :ref:`加盐哈希 <hashed and salted>` 操作。
+    切记对它进行 `加盐哈希`_ 操作。
 
     幸运的是，有一些插件用于对密码进行哈希以及验证哈希密码，所以添加这个功能
     也是非常直接了当的。也有很多通用的 Python 函数库可以用于哈希。
@@ -100,4 +100,4 @@
 
 继续阅读 :ref:`tutorial-templates` 。
 
-.. _hashed and salted: https://blog.codinghorror.com/youre-probably-storing-passwords-incorrectly/
+.. _加盐哈希: https://blog.codinghorror.com/youre-probably-storing-passwords-incorrectly/
