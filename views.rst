@@ -63,7 +63,7 @@ Flask 0.7 引入了即插视图，灵感来自 Django 的基于类而不是函�
             return User.query.all()
 
 这当然不是那么有助于一个小例子，但是对于解释基本原则已经很有用了。当你有一
-个基于类的视图，那么问题来了， `self` 指向什么。它工作的方式是，无论何时请
+个基于类的视图，那么问题来了， ``self`` 指向什么。它工作的方式是，无论何时请
 求被调度，会创建这个类的一个新实例，并且
 :meth:`~flask.views.View.dispatch_request` 方法会以 URL 规则为参数调用。
 这个类本身会用传递到 :meth:`~flask.views.View.as_view` 函数的参数来实例化。
