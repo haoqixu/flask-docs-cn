@@ -135,7 +135,7 @@ Python 包，这个包（通常是文件系统中的文件夹）就是资源文�
     admin = Blueprint('admin', __name__, static_folder='static')
 
 默认情况下，路径最右边的部分就是它在 web 上所暴露的地址。因为这里这个文件夹
-叫做 ``static`` ，它会在 蓝图 + ``/static`` 的位置上可用。也就是说，蓝图为
+叫做 :file:`static` ，它会在 蓝图 + ``/static`` 的位置上可用。也就是说，蓝图为
 ``/admin`` 把静态文件夹注册到 ``/admin/static`` 。
 
 最后是命名的 `blueprint_name.static` ，这样你可以生成它的 URL ，就像你对应用
@@ -150,14 +150,34 @@ Python 包，这个包（通常是文件系统中的文件夹）就是资源文�
 
     admin = Blueprint('admin', __name__, template_folder='templates')
 
-像对待静态文件一样，路径可以是绝对的或是相对蓝图资源文件夹的。模板文件夹会
-被加入到模板的搜索路径中，但是比实际的应用模板文件夹优先级低。这样，你可以
-容易地在实际的应用中覆盖蓝图提供的模板。
+对于静态文件，路径可以是绝对的或是相对蓝图资源文件夹的。
+
+模板文件夹会被加入到模板的搜索路径中，但是比实际的应用模板文件夹优先级低。
+这样，你可以容易地在实际的应用中覆盖蓝图提供的模板。
+这意味着，你如果不想蓝图模板被意外覆盖，得保证没有其它蓝图或者实际应用模板使用相同
+的相对路径。当多个蓝图提供相同的相对路径，第一个注册的蓝图优先于其它。
 
 那么当你有一个 ``yourapplication/admin`` 文件夹中的蓝图并且你想要渲染
 ``'admin/index.html'`` 模板，且你已经提供了 ``templates`` 作为
 `template_folder` ，你需要这样创建文件:
-``yourapplication/admin/templates/admin/index.html``
+:file:`yourapplication/admin/templates/admin/index.html` 。
+额外的 ``admin`` 目录是为了防止被实际应用模板目录下名为 ``index.html`` 的模板
+所覆盖。
+
+再次强调一下：如果你有个名为 ``admin`` 的蓝图，并且你想渲染一个蓝图特定的模板
+:file:`index.html` ，最好的想法是按照下面布局你的模板::
+
+    yourpackage/
+        blueprints/
+            admin/
+                templates/
+                    admin/
+                        index.html
+                __init__.py
+
+然后当你渲染模板，用 :file:`admin/index.html` 作为搜索的名字。如果你遇到了
+模板加载的问题，启用 ``EXPALAIN_TEMPLATE_LOADING`` 配置变量，这使得 Flask 在
+每次 ``render_template`` 调用时打印定位模板的过程。
 
 构造 URL
 -------------
@@ -174,3 +194,18 @@ Python 包，这个包（通常是文件系统中的文件夹）就是资源文�
 
 这个案例中，它实际上链接到 ``admin.index`` ，假如请求被分派到任何其它的
 admin 蓝图端点。
+
+错误处理
+--------------
+
+蓝图像 :class:`Flask` 应用程序对象一样支持 errorhandler 装饰器，所以指定蓝图特定
+的自定义错误页面非常简单。
+
+这里是一个“404 找不到页面”异常的例子::
+
+    @simple_page.errorhandler(404)
+    def page_not_found(e):
+        return render_template('pages/404.html')
+
+More information on error handling see :ref:`errorpages`.
+更多关于错误处理的内容请查阅 :ref:`errorpages` 。
