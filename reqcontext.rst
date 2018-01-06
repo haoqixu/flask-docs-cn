@@ -35,7 +35,7 @@ AttributeError: 'NoneType' object has no attribute 'request'
 
 >>> ctx = app.test_request_context('/?next=http://example.com/')
 
-可以通过两种方式利用这个上下文：使用 `with` 声明或是调用
+可以通过两种方式利用这个上下文：使用 ``with`` 声明或是调用
 :meth:`~flask.ctx.RequestContext.push` 和
 :meth:`~flask.ctx.RequestContext.pop` 方法:
 
@@ -65,13 +65,13 @@ u'http://example.com/'
         with self.request_context(environ):
             try:
                 response = self.full_dispatch_request()
-            except Exception, e:
+            except Exception as e:
                 response = self.make_response(self.handle_exception(e))
             return response(environ, start_response)
 
 :meth:`~Flask.request_context` 方法返回一个新的
-:class:`~flask.ctx.RequestContext` 对象，并结合 `with` 声明来绑定上下文。
-从相同线程中被调用的一切，直到 `with` 声明结束前，都可以访问全局的请求
+:class:`~flask.ctx.RequestContext` 对象，并结合 ``with`` 声明来绑定上下文。
+从相同线程中被调用的一切，直到 ``with`` 声明结束前，都可以访问全局的请求
 变量（ :data:`flask.request` 和其它）。
 
 请求上下文内部工作如同一个栈。栈顶是当前活动的请求。
