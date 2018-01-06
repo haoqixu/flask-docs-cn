@@ -38,7 +38,7 @@ Flask 提供了几个信号，其它的扩展可能会提供更多。另外，�
 确保也提供一个发送端，除非你确实想监听全部应用的信号。这在你开发一个扩展
 的时候尤其正确。
 
-比如这里有一个用于在单元测试中找出哪个模板被渲染和传入模板的变量的助手上
+比如这里有一个用于在单元测试中决定哪个模板被渲染和传入模板的变量的助手上
 下文管理器::
 
     from flask import template_rendered
@@ -68,7 +68,7 @@ Flask 提供了几个信号，其它的扩展可能会提供更多。另外，�
 确保订阅使用了一个额外的 ``**extra`` 参数，这样当 Flask 对信号引入新参数
 时你的调用不会失败。
 
-代码中，从 `with` 块的应用 `app` 中流出的渲染的所有模板现在会被记录到
+代码中，从 ``with`` 块的应用 `app` 中流出的渲染的所有模板现在会被记录到
 `templates` 变量。无论何时模板被渲染，模板对象和上下文中都会被添加到它
 里面。
 
@@ -130,7 +130,7 @@ Flask 提供了几个信号，其它的扩展可能会提供更多。另外，�
         def save(self):
             model_saved.send(self)
 
-永远尝试选择一个合适的发送端。如果你有一个发出信号的类，把 `self` 作为发送
+永远尝试选择一个合适的发送端。如果你有一个发出信号的类，把 ``self`` 作为发送
 端。如果你从一个随机的函数发出信号，把 ``current_app._get_current_object()``
 作为发送端。
 
@@ -165,154 +165,6 @@ Flask 提供了几个信号，其它的扩展可能会提供更多。另外，�
 核心信号
 ------------
 
-.. when modifying this list, also update the one in api.rst
+翻阅 :ref:`core-signals-list` 章节，查看所有内建的信号。
 
-下列是 Flask 中存在的信号:
-
-.. data:: flask.template_rendered
-   :noindex:
-
-   当模板成功渲染的时候，这个信号会发出。这个信号与模板实例
-   `template` 和上下文的字典（名为 `context` ）一起调用。
-
-   订阅示例::
-
-        def log_template_renders(sender, template, context, **extra):
-            sender.logger.debug('Rendering template "%s" with context %s',
-                                template.name or 'string template',
-                                context)
-
-        from flask import template_rendered
-        template_rendered.connect(log_template_renders, app)
-
-.. data:: flask.request_started
-   :noindex:
-
-   这个信号在处建立请求上下文之外的任何请求处理开始前发送。因为请求上下文
-   已经被约束，订阅者可以用 :class:`~flask.request` 之类的标准全局代理访问
-   请求。
-
-   订阅示例::
-
-        def log_request(sender, **extra):
-            sender.logger.debug('Request context is set up')
-
-        from flask import request_started
-        request_started.connect(log_request, app)
-
-.. data:: flask.request_finished
-   :noindex:
-
-   这个信号恰好在请求发送给客户端之前发送。它传递名为 `response` 的响应。
-
-   订阅示例::
-
-        def log_response(sender, response, **extra):
-            sender.logger.debug('Request context is about to close down.  '
-                                'Response: %s', response)
-
-        from flask import request_finished
-        request_finished.connect(log_response, app)
-
-.. data:: flask.got_request_exception
-   :noindex:
-
-   这个信号在请求处理中抛出异常时发送。它在标准异常处理生效 *之前* ，甚至是
-   在没有异常处理的情况下发送。异常本身会通过 `exception` 传递到订阅函数。
-
-   订阅示例::
-
-        def log_exception(sender, exception, **extra):
-            sender.logger.debug('Got exception during processing: %s', exception)
-
-        from flask import got_request_exception
-        got_request_exception.connect(log_exception, app)
-
-.. data:: flask.request_tearing_down
-   :noindex:
-
-   这个信号在请求销毁时发送。它总是被调用，即使发生异常。当前监听这个信号
-   的函数会在常规销毁处理后被调用，但这不是你可以信赖的。
-
-   订阅示例::
-
-        def close_db_connection(sender, **extra):
-            session.close()
-
-        from flask import request_tearing_down
-        request_tearing_down.connect(close_db_connection, app)
-
-   从 Flask 0.9 ，如果有异常的话它会被传递一个 `exc` 关键字参数引用导致销
-   毁的异常。
-
-.. data:: flask.appcontext_tearing_down
-   :noindex:
-
-   这个信号在应用上下文销毁时发送。它总是被调用，即使发生异常。当前监听这个信号
-   的函数会在常规销毁处理后被调用，但这不是你可以信赖的。
-
-   订阅示例::
-
-        def close_db_connection(sender, **extra):
-            session.close()
-
-        from flask import request_tearing_down
-        appcontext_tearing_down.connect(close_db_connection, app)
-
-   如果有异常它会被传递一个 `exc` 关键字参数引用导致销毁的异常。
-
-.. data:: flask.appcontext_pushed
-   :noindex:
-
-   这个信号在应用上下文压入栈时发送。发送者是应用对象。这通常在单元测试中
-   为了暂时地钩住信息比较有用。例如这可以用来提前在 `g` 对象上设置一些资源。
-
-   用法示例::
-
-        from contextlib import contextmanager
-        from flask import appcontext_pushed
-
-        @contextmanager
-        def user_set(app, user):
-            def handler(sender, **kwargs):
-                g.user = user
-            with appcontext_pushed.connected_to(handler, app):
-                yield
-
-   测试代码::
-
-        def test_user_me(self):
-            with user_set(app, 'john'):
-                c = app.test_client()
-                resp = c.get('/users/me')
-                assert resp.data == 'username=john'
-
-   .. versionadded:: 0.10
-
-.. data:: flask.appcontext_popped
-   :noindex:
-
-   这个信号在应用上下文弹出栈时发送。发送者是应用对象。这通常在
-   :data:`appcontext_tearing_down` 信号发送后发送。
-
-   .. versionadded:: 0.10
-
-
-.. data:: flask.message_flashed
-   :noindex:
-
-   这个信号在应用对象闪现一个消息时发送。消息作为 `message` 命名参数发送，
-   分类则是 `category` 参数。
-
-   订阅示例::
-
-        recorded = []
-        def record(sender, message, category, **extra):
-            recorded.append((message, category))
-
-        from flask import message_flashed
-        message_flashed.connect(record, app)
-
-   .. versionadded:: 0.10
-
-.. _blinker: http://pypi.python.org/pypi/blinker
+.. _blinker: https://pypi.python.org/pypi/blinker
