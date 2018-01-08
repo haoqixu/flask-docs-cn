@@ -24,6 +24,14 @@ Python 拥有的交互式 Shell 是人人都喜欢它的一个重要原因。交
 一般来说，在阅读本章节之前还是建议大家先阅读 :ref:`request-context` 
 相关章节。
 
+命令行接口
+----------------
+
+自 Flask 0.11 起，推荐使用 ``flask shell`` 命令与 shell 协作，它为你自动完成了
+更多的工作，例如自动初始化应用上下文。
+
+更多内容请查阅 :ref:`cli` 。
+
 创建一个请求上下文
 --------------------------
 
@@ -33,7 +41,7 @@ Python 拥有的交互式 Shell 是人人都喜欢它的一个重要原因。交
 
 >>> ctx = app.test_request_context()
 
-一般来说，您可以使用 `with` 声明来激活这个请求对象，
+一般来说，您可以使用 ``with`` 声明来激活这个请求对象，
 但是在终端中，调用 :meth:`~flask.ctx.RequestContext.push`
 方法和 :meth:`~flask.ctx.RequestContext.pop` 方法
 会更简单:
